@@ -1,46 +1,117 @@
-# Airline Passenger Satisfaction Prediction
+<div align="center">
 
-A machine learning pipeline that predicts whether an airline passenger is satisfied or dissatisfied, based on flight and service attributes. Includes full EDA, feature engineering, automated model comparison, hyperparameter tuning, and a Streamlit app for live predictions.
+# ✈️ Airline Passenger Satisfaction Prediction
 
-## Problem
+### Predicting passenger satisfaction from 129K+ survey records using ML — with a live Streamlit prediction app
 
-Given a passenger satisfaction survey (129,880 records, 24 attributes covering service ratings, flight details, and demographics), the goal is to identify which factors most influence satisfaction and build a model that predicts satisfaction for new passengers.
+![Python](https://img.shields.io/badge/-Python-3776AB?style=flat&logo=python&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/-scikit--learn-F7931E?style=flat&logo=scikit-learn&logoColor=white)
+![XGBoost](https://img.shields.io/badge/-XGBoost-006ACC?style=flat)
+![LightGBM](https://img.shields.io/badge/-LightGBM-02569B?style=flat)
+![Streamlit](https://img.shields.io/badge/-Streamlit-FF4B4B?style=flat&logo=streamlit&logoColor=white)
+![Pandas](https://img.shields.io/badge/-Pandas-150458?style=flat&logo=pandas&logoColor=white)
 
-Dataset adapted from the airline passenger satisfaction survey by John D (Kaggle), cleaned for classification.
+**Final Model: RandomForestClassifier — 95.6% Accuracy**
 
-## Approach
+</div>
 
-**1. Data Cleaning**
-- Loaded 129,880 records × 24 columns
-- Dropped missing values and the non-predictive `id` column
+---
 
-**2. Exploratory Data Analysis**
-- Automated profiling via `pandas_profiling` (`ProfileReport`) to surface missing values, distributions, and correlated features
-- Visualized satisfaction breakdown by gender, customer type, class, and travel type
-- Outlier detection and removal using the IQR method across all numerical features
+## 📋 Overview
 
-**3. Feature Engineering**
-- Label-encoded all categorical columns (`Gender`, `Customer Type`, `Type of Travel`, `Class`, target)
-- Correlation analysis against the target (`satisfaction_v2`) to identify the strongest drivers — top features: **Inflight entertainment, Ease of online booking, Online support, On-board service, Online boarding**
-- Combined `Departure Delay` and `Arrival Delay` (correlation ≈ 0.95) into a single `Delay` feature
-- Dropped `Gate location` and `Flight Distance` — negligible correlation with satisfaction
+Given a passenger satisfaction survey (**129,880 records, 24 attributes**), this project identifies the strongest drivers of airline passenger satisfaction and builds a model to predict it for new passengers — deployed as an interactive web app.
 
-**4. Modeling**
-- Ran AutoML comparison across 29 classifiers via `LazyPredict` to shortlist candidates
-- Manually compared top candidates (RandomForest, LightGBM, XGBoost, SVC, KNN) with and without feature scaling
-- **RandomForestClassifier** selected as the best tradeoff of accuracy and training time
-- Tuned hyperparameters with `GridSearchCV` (5-fold CV, 32 candidate combinations) → best params: `criterion='entropy', max_depth=50, n_estimators=200`
+> Dataset adapted from the airline passenger satisfaction survey by John D (Kaggle), cleaned for classification.
 
-**5. Evaluation**
-- **Accuracy: 95.6%** on the held-out test set
-- Precision/recall balanced across both classes (~0.95–0.96 F1-score)
-- Validated with 10-fold cross-validation and a confusion matrix
+---
 
-**6. Deployment**
-- Serialized the trained model and label encoder (`pickle` + `bz2` compression)
-- Built a Streamlit app (`App.py`) that collects passenger inputs and returns a satisfaction prediction with probability score
+## 🔍 Exploratory Data Analysis
 
-## Repository Contents
+**Key findings:**
+- 🥇 **Inflight entertainment**, **ease of online booking**, and **online support** are the strongest satisfaction drivers
+- 🥈 Business class and loyal customers report meaningfully higher satisfaction
+- 🔗 Departure and arrival delay are highly correlated (0.95) → merged into a single `Delay` feature
+- 🗑️ `Gate location` and `Flight Distance` dropped — negligible correlation with the target
+
+---
+
+## ⚙️ Pipeline
+
+```
+Raw Data (129,880 rows) 
+    ↓
+Cleaning (drop nulls, drop id)
+    ↓
+EDA + Automated Profiling (pandas-profiling)
+    ↓
+Outlier Removal (IQR method)
+    ↓
+Feature Engineering (encode categoricals, merge delay features)
+    ↓
+AutoML Screening (LazyPredict — 29 models)
+    ↓
+Manual Model Comparison (5 top candidates)
+    ↓
+Hyperparameter Tuning (GridSearchCV)
+    ↓
+Final Model + Streamlit App
+```
+
+---
+
+## 🤖 Model Comparison
+
+Screened 29 classifiers automatically with **LazyPredict**, then compared top candidates manually with and without feature scaling:
+
+| Model | Accuracy | F1 Score | Time Taken (s) |
+|---|:---:|:---:|:---:|
+| **🏆 RandomForestClassifier** | **0.96** | **0.96** | 46.5 |
+| ExtraTreesClassifier | 0.96 | 0.96 | 93.6 |
+| XGBClassifier | 0.95 | 0.95 | 33.3 |
+| LGBMClassifier | 0.95 | 0.95 | 6.7 |
+| SVC | 0.95 | 0.95 | 681.3 |
+| KNeighborsClassifier | 0.93 | 0.93 | 299.8 |
+
+**RandomForestClassifier** was selected — best accuracy, and dramatically faster than SVC or KNN for comparable performance.
+
+### Hyperparameter Tuning (GridSearchCV, 5-fold CV)
+
+```
+Best parameters: criterion='entropy', max_depth=50, n_estimators=200
+Best CV score: 0.957
+```
+
+---
+
+## 📊 Results
+
+| Metric | Score |
+|---|:---:|
+| **Accuracy** | 95.6% |
+| **Precision** | 0.955 |
+| **Recall** | 0.956 |
+| **F1-Score** | 0.956 |
+
+Validated with 10-fold cross-validation for robustness.
+
+---
+
+## 🚀 Live App
+
+The trained model is deployed behind a **Streamlit** app — enter passenger and flight details, get an instant satisfaction prediction with a probability score.
+
+### Run it locally
+
+```bash
+git clone https://github.com/khaled166/Airline-Passenger-Satisfaction-Prediction.git
+cd Airline-Passenger-Satisfaction-Prediction
+pip install -r requirements.txt
+streamlit run App.py
+```
+
+---
+
+## 📁 Repository Structure
 
 | File | Description |
 |---|---|
@@ -50,25 +121,25 @@ Dataset adapted from the airline passenger satisfaction survey by John D (Kaggle
 | `Transformer.pkl` | Serialized label encoder for categorical inputs (bz2-compressed) |
 | `requirements.txt` | Python dependencies |
 
-## Tech Stack
+---
 
-`Python` `Pandas` `NumPy` `scikit-learn` `LightGBM` `XGBoost` `LazyPredict` `pandas-profiling` `Streamlit` `Seaborn` / `Matplotlib`
+## 💡 Key Takeaways
 
-## Running Locally
+- Service-quality features (entertainment, support, booking ease) outweigh logistical factors (distance, delay) in driving satisfaction
+- Tree-based ensembles (RandomForest, XGBoost, LightGBM) significantly outperformed linear models on this dataset
+- Feature scaling had minimal effect on tree-based models but changed rankings for SVC and KNN
 
-```bash
-pip install -r requirements.txt
-streamlit run App.py
-```
+## 🔭 Possible Extensions
 
-## Key Findings
+- [ ] Add SHAP explainability to the Streamlit app for per-prediction feature importance
+- [ ] Replace label encoding with one-hot encoding for cleaner categorical treatment
+- [ ] Package the model behind a FastAPI REST endpoint instead of a script-based app
+- [ ] Deploy the Streamlit app publicly (Streamlit Community Cloud) and link it here
 
-- In-flight service quality (entertainment, online support/booking, on-board service) drives satisfaction far more than flight logistics like distance or delay
-- Business class and loyal customers show meaningfully higher satisfaction rates
-- RandomForest outperformed gradient boosting methods (XGBoost, LightGBM) on this dataset while remaining efficient to train
+---
 
-## Possible Extensions
+<div align="center">
 
-- Add SHAP-based explainability to the Streamlit app so predictions come with a feature-level explanation
-- Replace label encoding with one-hot encoding for a cleaner treatment of nominal categories
-- Package the model behind a REST API (FastAPI) instead of a script-based Streamlit app
+**Built by [Khaled SeifAldin](https://github.com/khaled166)**
+
+</div>
